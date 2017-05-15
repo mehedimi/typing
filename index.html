@@ -16,7 +16,7 @@
 							<div class="panel-heading"><h2 style="margin:0">World List</h2></div>
 							<div class="panel-body">
 								<div class="words">
-									<span v-for="(w,index) in words" :item-index="index" :class="{correct:isCorrect(w), wrong : isWrong()}">{{ w.text }}</span>
+									<span v-for="(w,index) in words" :item-index="index" :class="{correct:isCorrect(w), wrong : isWrong(w)}">{{ w.text }}</span>
 								</div>
 							</div>
 						</div>
@@ -30,6 +30,16 @@
 									<span class="input-group-btn">
 								        <button class="btn btn-default" type="button"><span class="glyphicon glyphicon-refresh"></span></button>
 								    </span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<br><br>
+					<div class="col-md-6 col-md-offset-3">
+						<div class="panel panel-default">
+							<div class="panel-body">
+								<div class="input-group input-group-lg">
+									<h1>Wrong: {{ wrong.length }}</h1>
 								</div>
 							</div>
 						</div>
@@ -56,16 +66,24 @@
 				methods : {
 					typing : function(e){
 						if (e.keyCode == 32) {
+							if (this.words[this.currentIndex].text + ' ' == this.currentWord) {
+								this.words[this.currentIndex].action = 'correct';
+							}else{
+								console.log(this.wrong.length);
+								this.wrong[(this.wrong.length)] = this.words[this.currentIndex];
+								this.words[this.currentIndex].action = 'wrong';
+
+							}
+							this.currentWord = '';
 							this.currentIndex = this.currentIndex + 1;
-							this.words[this.currentIndex].action = 'correct';
 						}
 						
 					},
 					isCorrect : function(value){
-						return value.action == 'correct'
+						return value.action == 'correct';
 					},
-					isWrong : function(){
-
+					isWrong : function(value){
+						return value.action == 'wrong';
 					}
 				}
 			});

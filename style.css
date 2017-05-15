@@ -2,11 +2,8 @@
 	font-size:40px;
 }
 .words span{
-	white-space: -moz-pre-wrap; /* Firefox */
-	white-space: -o-pre-wrap; /* Opera */
-	white-space: pre-wrap; /* Chrome */
-	word-wrap: break-word; /* IE */
-	margin-right : 10px;
+	display: inline-block;
+	margin-right: 10px;
 }
 .correct{
 	background-color: green;
