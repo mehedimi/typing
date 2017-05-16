@@ -14,7 +14,7 @@
 				<div class="card">
 					<div class="card-content">
 						<p class="title words">
-							<span v-for="(w,index) in words" :item-index="index" :class="{correct:isCorrect(w), wrong : isWrong(w)}">{{ w.text }}</span>
+							<span v-for="(w,index) in words" class="word" :item-index="index" :class="{correct:isCorrect(w), wrong : isWrong(w), typing : isTyping(w)}">{{ w.text }}</span>
 						</p>
 					</div>
 				</div>
@@ -68,12 +68,19 @@
 							</header>
 							<div class="card-content">
 								<div class="content">
-									<a class="panel-block is-active">
+									<a class="panel-block" :class="{'is-active' : started}">
+									    <span class="panel-icon">
+									      <i class="fa fa-clock-o"></i>
+									    </span>
+									    Time: {{minutes}} : {{ seconds }}
+									</a>
+									<a class="panel-block" :class="{'is-active' : started}">
 									    <span class="panel-icon">
 									      <i class="fa fa-exclamation-triangle"></i>
 									    </span>
 									    Wrong: {{ wrong.length }}
 									</a>
+									
 								</div>
 							</div>
 						</div>
@@ -91,14 +98,46 @@
 					wrong : [],
 					currentIndex : 0,
 					currentWord : '',
-					typingError : false
+					typingError : false,
+					// Timer 
+					minutes : 2,
+					seconds : 0,
+					started : false,
+					timer : null,
 				},
 				mounted : function(){
 					this.loadData();
+					this.$on('startTimer', function(){
+						this.timer = setInterval(() => {
+							if (this.seconds == 0) {
+								this.seconds = 60;
+								this.minutes--;
+							}
+					       this.seconds--;
+					       if (this.seconds == 0 && this.minutes == 0) {
+					       		this.$emit('endTimer');
+					       		this.started = false;
+					       }
+					    },1000);
+					});
+					this.$on('endTimer', function(){
+						clearInterval(this.timer);
+					});
 				},
 				methods : {
 					typing : function(e){
+						if (this.currentIndex == 0) {
+							if (this.started == false) {
+								this.$emit('startTimer');
+								this.started = true;
+							}
+							
+							this.words[this.currentIndex].action = 'typing';
+							console.log('Start');
+						}
 						if (e.keyCode == 32) {
+							this.words[(this.currentIndex + 1)].action = 'typing';
+							
 							if (this.words[this.currentIndex].text + ' ' == this.currentWord) {
 								this.words[this.currentIndex].action = 'correct';
 							}else{
@@ -108,9 +147,6 @@
 							this.currentWord = '';
 							this.currentIndex = this.currentIndex + 1;
 						}
-						// if(this.words[this.currentIndex].text){
-
-						// }
 						
 					},
 					isCorrect : function(value){
@@ -119,6 +155,9 @@
 					isWrong : function(value){
 						return value.action == 'wrong';
 					},
+					isTyping : function(value){
+						return value.action == 'typing';
+					},
 					loadData : function(){
 						axios.get('./scripts/data.json').then((response) => {
 							this.words = response.data.words;
@@ -126,9 +165,14 @@
 					},
 					reset : function(){
 						this.loadData();
-					}
+						this.wrong = [],
+						this.currentIndex = 0;
+						this.currentWord = '';
+						this.typingError = false;
+					},
 				}
 			});
+
 		</script>
 	</body>
 </html>
