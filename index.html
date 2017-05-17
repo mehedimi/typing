@@ -74,7 +74,7 @@
 									    </span>
 									    Time: {{minutes}} : {{ seconds }}
 									</a>
-									<a class="panel-block" :class="{'is-active' : started}">
+									<a class="panel-block is-error" :class="{'is-active' : started}">
 									    <span class="panel-icon">
 									      <i class="fa fa-exclamation-triangle"></i>
 									    </span>
@@ -100,7 +100,7 @@
 					currentWord : '',
 					typingError : false,
 					// Timer 
-					minutes : 2,
+					minutes : 1,
 					seconds : 0,
 					started : false,
 					timer : null,
@@ -122,6 +122,7 @@
 					});
 					this.$on('endTimer', function(){
 						clearInterval(this.timer);
+						this.reset();
 					});
 				},
 				methods : {
