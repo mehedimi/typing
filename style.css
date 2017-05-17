@@ -7,21 +7,26 @@
     margin-bottom: 10px;
     font-size: 35px;
     font-weight: 500;
-    border-radius: 10px;
+    border-radius: 4px;
 }
 .words .correct{
 	color : #1abc9c;
 }
 .words .typing{
-	background-color: #ddd;
+	background-color: #95a5a6;
 	position: relative;
+	color:#fff
 }
 .is-error.is-active{
 	border-left-color:#E74C3C 
 }
-.is-error.is-active .panel-block.is-active .panel-icon{
+.panel-block.is-active .is-error-color{
 	color: #E74C3C;
 }
 .words .wrong{
 	color: #e74c3c;
+}
+.input{
+	border-width:2px;
+	box-shadow:none;
 }
