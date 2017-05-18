@@ -10,7 +10,6 @@
 	<body>
 		<div id="app">
 			<div class="container">
-				<br> <br>
 				<div class="card">
 					<div class="card-content">
 						<p class="title words">
@@ -24,22 +23,23 @@
 						<div class="card">
 							<header class="card-header">
 								<p class="card-header-title">
-								Component
+									Error Log
 								</p>
-								<a class="card-header-icon">
-									<span class="icon">
-										<i class="fa fa-angle-down"></i>
-									</span>
-								</a>
 							</header>
 							<div class="card-content">
 								<div class="content">
-									<a class="panel-block is-active">
-									    <span class="panel-icon">
-									      <i class="fa fa-book"></i>
+									<a class="panel-block is-error is-active" v-for="wr in wrong">
+									    <span class="panel-icon is-error-color">
+									      <i class="fa fa-frown-o"></i>
 									    </span>
-									    bulma
-									  </a>
+									    <span class="is-error-color" style="margin-right: 5px">{{ wr.wrong }} </span> : <span class="success-log"> {{ wr.correct }}</span>
+									</a>
+									<a class="panel-block is-active" v-if="wrong.length == 0">
+									    <span class="panel-icon">
+									      <i class="fa fa-smile-o"></i>
+									    </span>
+									    Hurray your entry is 100% correct
+									</a>
 								</div>
 							</div>
 						</div>
@@ -47,7 +47,7 @@
 					<div class="column is-6">
 						<div class="field has-addons">
 							<p class="control is-expanded">
-							  <input class="input is-fullwidth is-center" @keyup="typing" v-model="currentWord" style="text-align: center" :class="{'is-danger':typingError}" type="text" placeholder="Type Here....">
+							  <input class="input is-fullwidth is-center" @keyup="typing" v-model="currentWord" style="text-align: center" :class="{'is-danger':typingError}" :disabled="disabled" type="text" placeholder="Type Here....">
 							  <p class="control">
 							      <a class="button is-primary" @click="reset">
 								    	<span class="icon">
@@ -80,7 +80,24 @@
 									    </span>
 									    Wrong: {{ wrong.length }}
 									</a>
-									
+									<a class="panel-block" :class="{'is-active' : started}">
+									    <span class="panel-icon">
+									      <i class="fa fa-check"></i>
+									    </span>
+									    Correct: {{ correct.length }}
+									</a>
+									<a class="panel-block" :class="{'is-active' : started}">
+									    <span class="panel-icon">
+									      <i class="fa fa-keyboard-o"></i>
+									    </span>
+									    Keystrokes: <span style="margin: 0 5px" class="is-error-color">{{ wrongKeyStrokes }}</span> - <span class="success-log">{{ correctKeyStrokes }}</span>
+									</a>
+									<a class="panel-block" :class="{'is-active' : started}">
+									    <span class="panel-icon">
+									      <i class="fa fa-bolt"></i>
+									    </span>
+									    Accuracy: {{ Math.round((100 * correctKeyStrokes) / (wrongKeyStrokes + correctKeyStrokes)) }} %
+									</a>
 								</div>
 							</div>
 						</div>
@@ -96,6 +113,7 @@
 				data : {
 					words : [],
 					wrong : [],
+					correct : [],
 					currentIndex : 0,
 					currentWord : '',
 					typingError : false,
@@ -104,6 +122,9 @@
 					seconds : 0,
 					started : false,
 					timer : null,
+					disabled : false,
+					wrongKeyStrokes : 0,
+					correctKeyStrokes : 0,
 				},
 				mounted : function(){
 					this.loadData();
@@ -117,12 +138,14 @@
 					       if (this.seconds == 0 && this.minutes == 0) {
 					       		this.$emit('endTimer');
 					       		this.started = false;
+					       		this.minutes = 2;
 					       }
 					    },1000);
 					});
 					this.$on('endTimer', function(){
 						clearInterval(this.timer);
 						this.reset();
+						this.disabled = true;
 					});
 				},
 				methods : {
@@ -131,19 +154,23 @@
 							if (this.started == false) {
 								this.$emit('startTimer');
 								this.started = true;
-							}
-							
+							}				
 							this.words[this.currentIndex].action = 'typing';
-							console.log('Start');
 						}
 						if (e.keyCode == 32) {
 							this.words[(this.currentIndex + 1)].action = 'typing';
 							
 							if (this.words[this.currentIndex].text + ' ' == this.currentWord) {
 								this.words[this.currentIndex].action = 'correct';
+								this.correct.push(this.words[this.currentIndex]);
+								this.correctKeyStrokes = (this.correctKeyStrokes + this.words[this.currentIndex].text.length);
 							}else{
-								this.wrong[(this.wrong.length)] = this.words[this.currentIndex];
+								this.wrong.push({
+												"correct" : this.words[this.currentIndex].text,
+												"wrong" : this.currentWord
+											});
 								this.words[this.currentIndex].action = 'wrong';
+								this.wrongKeyStrokes = (this.wrongKeyStrokes + this.words[this.currentIndex].text.length);
 							}
 							this.currentWord = '';
 							this.currentIndex = this.currentIndex + 1;
@@ -170,6 +197,7 @@
 						this.currentIndex = 0;
 						this.currentWord = '';
 						this.typingError = false;
+						this.disabled = false;
 					},
 				}
 			});
