@@ -14,7 +14,7 @@
 				<div class="card">
 					<div class="card-content">
 						<p class="title words">
-							<span v-for="(w,index) in words" class="word" :item-index="index" :class="{correct:isCorrect(w), wrong : isWrong(w), typing : isTyping(w)}">{{ w.text }}</span>
+							<span v-for="(w,index) in words" class="word" :item-index="index" :class="{correct:isCorrect(w), wrong : isWrong(w), typing : isTyping(w), isTypingError : isTypingError(w)}">{{ w.text }}</span>
 						</p>
 					</div>
 				</div>
@@ -63,7 +63,7 @@
 						<div class="card">
 							<div class="card-content">
 								<p class="title has-text-centered is-bold ">
-									Word Per Minute <strong>0</strong> WPM
+									Word Per Minute <strong>{{ wpmCount }}</strong> WPM
 								</p>
 							</div>
 						</div>
@@ -112,6 +112,13 @@
 						</div>
 					</div>
 				</div>
+				<div class="card">
+					<div class="card-content">
+						<p class="title words">
+							<span class="word">Created By: <a target="_blank" href="https://www.facebook.com/mehedimi">MD Mehedi Hasan</a></span>
+						</p>
+					</div>
+				</div>
 			</div>
 		</div>
 		<script src="https://unpkg.com/vue"></script>
@@ -126,7 +133,7 @@
 					currentIndex : 0,
 					currentWord : '',
 					typingError : false,
-					// Timer 
+					// Timer
 					minutes : 1,
 					seconds : 0,
 					started : false,
@@ -134,10 +141,12 @@
 					disabled : false,
 					wrongKeyStrokes : 0,
 					correctKeyStrokes : 0,
+					wpmCount : 0,
 				},
 				mounted : function(){
 					this.loadData();
 					this.$on('startTimer', function(){
+						var startSecond = Math.floor(Date.now() / 1000);
 						this.timer = setInterval(() => {
 							if (this.seconds == 0) {
 								this.seconds = 60;
@@ -147,13 +156,14 @@
 					       if (this.seconds == 0 && this.minutes == 0) {
 					       		this.$emit('endTimer');
 					       		this.started = false;
-					       		this.minutes = 2;
+					       		this.minutes = 1;
 					       }
+					       var typingMinute = (Math.floor(Date.now() / 1000) - startSecond) / 60;
+					       this.wpmCount = Math.floor((this.correctKeyStrokes / 5) / typingMinute);
 					    },1000);
 					});
 					this.$on('endTimer', function(){
 						clearInterval(this.timer);
-						this.reset();
 						this.disabled = true;
 					});
 				},
@@ -166,9 +176,20 @@
 							}				
 							this.words[this.currentIndex].action = 'typing';
 						}
+						if(!this.fuzzyComparison(this.words[this.currentIndex].text + ' ', this.currentWord + '*')){
+							this.words[this.currentIndex].action = 'typingError';
+						}else{
+							this.words[this.currentIndex].action = 'typing';
+						}
 						if (e.keyCode == 32) {
+							if(this.words[(this.currentIndex + 1)] === undefined){
+								this.disabled = true;
+								this.$emit('endTimer');
+								alert("Congratulation! Job Done!");
+								return;
+							}
 							this.words[(this.currentIndex + 1)].action = 'typing';
-							
+
 							if (this.words[this.currentIndex].text + ' ' == this.currentWord) {
 								this.words[this.currentIndex].action = 'correct';
 								this.correct.push(this.words[this.currentIndex]);
@@ -183,6 +204,7 @@
 							}
 							this.currentWord = '';
 							this.currentIndex = this.currentIndex + 1;
+							
 						}
 						
 					},
@@ -195,6 +217,9 @@
 					isTyping : function(value){
 						return value.action == 'typing';
 					},
+					isTypingError : function(value){
+						return value.action == 'typingError'
+					},
 					loadData : function(){
 						axios.get('./scripts/data.json').then((response) => {
 							this.words = response.data.words;
@@ -202,15 +227,31 @@
 					},
 					reset : function(){
 						this.loadData();
-						this.wrong = [],
+						this.wrong = [];
+						this.correct = [];
 						this.currentIndex = 0;
 						this.currentWord = '';
 						this.typingError = false;
+						// Timer
+						this.minutes = 1;
+						this.seconds = 0;
+						this.started = false;
+						this.timer = null;
 						this.disabled = false;
+						this.wrongKeyStrokes = 0;
+						this.correctKeyStrokes = 0;
+						this.wpmCount = 0;
 					},
+					escapeRegExp : function(str){
+						return str.replace(/[\-\[\]\/\{\}\(\)\+\?\.\\\^\$\|]/g, "\\$&");
+					},
+					fuzzyComparison : function(str, mask){
+						var regex = '^' + this.escapeRegExp(mask).replace(/\*/, '.*') + '$';
+					    var r = new RegExp(regex);
+					    return r.test(str);
+					}
 				}
 			});
-
 		</script>
 	</body>
 </html>

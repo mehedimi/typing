@@ -13,8 +13,12 @@
 	color : #1abc9c;
 }
 .words .typing{
-	background-color: #95a5a6;
+	background-color: #1abc9c;
 	position: relative;
+	color:#fff
+}
+.words .isTypingError{
+	background-color: #e74c3c;
 	color:#fff
 }
 .is-error.is-active{
